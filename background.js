@@ -52,6 +52,12 @@ async function clearAllTabs() {
   );
 }
 
+async function resetOverride() {
+  await clearAllTabs();
+  await chrome.storage.local.remove("activeTimezone");
+  updateBadge(null);
+}
+
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   (async () => {
     if (msg.type === "SET_TIMEZONE") {
@@ -60,9 +66,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       updateBadge(msg.timezone);
       sendResponse({ ok: true });
     } else if (msg.type === "CLEAR_TIMEZONE") {
-      await clearAllTabs();
-      await chrome.storage.local.remove("activeTimezone");
-      updateBadge(null);
+      await resetOverride();
       sendResponse({ ok: true });
     } else if (msg.type === "GET_STATE") {
       sendResponse({ activeTimezone: await getActiveTimezone() });
@@ -86,6 +90,13 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
 
 chrome.tabs.onRemoved.addListener((tabId) => {
   chrome.debugger.detach({ tabId }).catch(() => {});
+});
+
+// User clicked "Cancel" on Chrome's "started debugging this browser" infobar -
+// they're rejecting the debugger session, so treat it the same as hitting Reset.
+chrome.debugger.onDetach.addListener(async (_source, reason) => {
+  if (reason !== "canceled_by_user") return;
+  if (await getActiveTimezone()) await resetOverride();
 });
 
 chrome.runtime.onStartup.addListener(async () => {

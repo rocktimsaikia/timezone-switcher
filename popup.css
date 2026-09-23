@@ -124,8 +124,19 @@ button.secondary {
   color: #888;
 }
 
-.hint {
-  margin: 12px 0 0;
+.info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 8px 10px;
+  background: #e8f0fe;
+  border: 1px solid #c6dafc;
+  border-radius: 4px;
+}
+
+.info-text {
+  margin: 0;
   font-size: 11px;
-  color: #666666;
+  color: #1b4079;
 }
