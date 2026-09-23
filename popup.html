@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Timezone Switcher</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div id="status" class="status status-off">
+    <span id="status-dot" class="status-dot"></span>
+    <span id="status-text">Off - using system timezone</span>
+  </div>
+
+  <label for="country">Country</label>
+  <div class="combobox">
+    <input id="country" placeholder="Search country..." autocomplete="off" />
+    <div id="country-dropdown" class="dropdown-list hidden"></div>
+  </div>
+
+  <label for="timezone">Timezone</label>
+  <select id="timezone" disabled></select>
+
+  <div class="actions">
+    <button id="apply" disabled>Apply</button>
+    <button id="reset" class="secondary">Reset to system timezone</button>
+  </div>
+
+  <p class="hint">
+    Applying attaches Chrome's debugger to open tabs, which shows a yellow
+    "being debugged" bar per tab - that's Chrome's own signal, not a bug.
+  </p>
+
+  <script src="popup.js"></script>
+</body>
+</html>
