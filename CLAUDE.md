@@ -58,3 +58,8 @@ Key behaviors in `background.js` worth knowing before changing it:
   `chrome.action.setBadgeText`/`setBadgeBackgroundColor` when an override is
   active, cleared when not. The per-tab yellow infobar is a separate,
   Chrome-owned signal - don't conflate the two when reasoning about state.
+- **No `host_permissions` in the manifest, intentionally.** `chrome.debugger`
+  attaches by `tabId`, not by URL match pattern, so it needs no host
+  permissions at all. Don't add `<all_urls>` back - the Chrome Web Store
+  flags broad host permissions for extra manual review, and nothing here
+  reads `tab.url` anyway (only `tab.id`).

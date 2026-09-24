@@ -4,7 +4,6 @@
   "version": "1.0.0",
   "description": "Override your browser's timezone by country.",
   "permissions": ["debugger", "storage", "tabs"],
-  "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
   },
