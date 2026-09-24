@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Timezone Switcher",
   "version": "1.0.0",
-  "description": "Override the browser's effective timezone by country, with a visible signal while active.",
+  "description": "Override your browser's timezone by country.",
   "permissions": ["debugger", "storage", "tabs"],
   "host_permissions": ["<all_urls>"],
   "background": {
