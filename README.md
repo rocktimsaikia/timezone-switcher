@@ -8,7 +8,9 @@ immediately.
 
 ## Install
 
-[Get it from the Chrome Web Store](https://chromewebstore.google.com/detail/timezone-switcher/jfhlfigbpompllkhhknaekjadehgajdm)
+[link-chrome]: https://chromewebstore.google.com/detail/timezone-switcher/jfhlfigbpompllkhhknaekjadehgajdm 'Version published on Chrome Web Store'
+
+[<img src="https://raw.githubusercontent.com/alrra/browser-logos/90fdf03c/src/chrome/chrome.svg" width="48" alt="Chrome" valign="middle">][link-chrome] [<img valign="middle" src="https://img.shields.io/chrome-web-store/v/jfhlfigbpompllkhhknaekjadehgajdm.svg?label=%20">][link-chrome] [Install for Chrome][link-chrome]
 
 ## Usage
 
