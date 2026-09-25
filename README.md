@@ -8,8 +8,7 @@ immediately.
 
 ## Install
 
-1. `chrome://extensions` -> enable **Developer mode**.
-2. **Load unpacked** -> select this folder.
+[Get it from the Chrome Web Store](https://chromewebstore.google.com/detail/timezone-switcher/jfhlfigbpompllkhhknaekjadehgajdm)
 
 ## Usage
 
@@ -19,3 +18,14 @@ immediately.
 Applying attaches Chrome's debugger to open tabs, which shows a yellow
 "being debugged" bar per tab - that's Chrome's own signal, not a bug, and
 it stays until you reset.
+
+## Screenshots
+
+<p>
+  <img src="store-assets/screenshot-1-idle.png" width="400" alt="Popup, idle state">
+  <img src="store-assets/screenshot-2-search.png" width="400" alt="Searching a country">
+</p>
+<p>
+  <img src="store-assets/screenshot-3-timezones.png" width="400" alt="Picking a timezone">
+  <img src="store-assets/screenshot-4-apply.png" width="400" alt="Applied timezone override">
+</p>
