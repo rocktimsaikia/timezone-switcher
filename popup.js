@@ -146,8 +146,9 @@ resetBtn.addEventListener("click", async () => {
     chrome.runtime.sendMessage({ type: "GET_STATE" }),
     getCurrentTab(),
   ]);
-  setStatus(activeTimezone, activeTabId === currentTab.id);
-  if (activeTimezone) {
+  const isCurrentTab = activeTabId === currentTab.id;
+  setStatus(activeTimezone, isCurrentTab);
+  if (activeTimezone && isCurrentTab) {
     const code = findCodeForZone(activeTimezone);
     if (code) {
       countryInput.value = tzData[code].name;

@@ -82,4 +82,5 @@ Key behaviors worth knowing before changing it:
 - **Badge is per-tab** (`{tabId}` on `setBadgeText`), re-set on each
   `tabs.onUpdated` `"loading"` for the overridden tab.
 - **Popup opened on a different tab** than the overridden one shows
-  "(on another tab)" in the status line.
+  "(on another tab)" in the status line and leaves the country/timezone
+  pickers empty - they only prefill on the overridden tab itself.
