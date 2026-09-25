@@ -1,6 +1,6 @@
 const CDP_VERSION = "1.3";
 const ACTIVE_BADGE_TEXT = "TZ";
-const ACTIVE_BADGE_COLOR = "#2e7d32";
+const ACTIVE_BADGE_COLOR = "#3d8743";
 
 async function getActiveTimezone() {
   const { activeTimezone } = await chrome.storage.local.get("activeTimezone");

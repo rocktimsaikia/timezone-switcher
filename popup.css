@@ -34,12 +34,12 @@ button {
   border-radius: 4px;
   font-size: 13px;
   cursor: pointer;
-  background: #2e7d32;
+  background: #3d8743;
   color: #ffffff;
 }
 
 button:disabled {
-  background: #a5c9a7;
+  background: #a8c9aa;
   color: #eef5ee;
   cursor: not-allowed;
 }
@@ -75,12 +75,12 @@ button.secondary {
 }
 
 .status-on {
-  background: #e6f4ea;
+  background: #ecf3ec;
   color: #1e4620;
 }
 
 .status-on .status-dot {
-  background: #2e7d32;
+  background: #3d8743;
 }
 
 .combobox {
@@ -115,7 +115,7 @@ button.secondary {
 
 .dropdown-item:hover,
 .dropdown-item.active {
-  background: #e6f4ea;
+  background: #ecf3ec;
 }
 
 .dropdown-empty {
