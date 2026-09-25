@@ -13,9 +13,10 @@ Load unpacked -> this folder. Reload there after any edit.
 Run it after touching `tz-shim.js`. Everything else is verified by reloading
 the unpacked extension and exercising the popup + a real tab.
 
-Store upload zip lists files explicitly (keep `tz-shim.js`/`tz-boot.js` in it,
-keep the test out):
-`zip -r timezone-switcher.zip manifest.json background.js tz-shim.js tz-boot.js popup.html popup.js popup.css data icons`
+`./build.sh` builds `timezone-switcher.zip` for Store upload - only needed
+right before an upload (bump `version` in `manifest.json` first), not after
+every change. It lists files explicitly: add any new runtime file there, keep
+the test out.
 
 ## Architecture
 
