@@ -103,11 +103,29 @@ document.addEventListener("click", (e) => {
   if (e.target !== countryInput) countryDropdown.classList.add("hidden");
 });
 
+const REQUIRED = { origins: ["<all_urls>"] };
+
 applyBtn.addEventListener("click", async () => {
   const zone = timezoneSelect.value;
   if (!zone) return;
   applyBtn.disabled = true;
   const tab = await getCurrentTab();
+
+  if (!(await chrome.permissions.contains(REQUIRED))) {
+    // background finishes the apply in permissions.onAdded, even if this popup closes during the prompt
+    await chrome.storage.session.set({ pendingApply: { timezone: zone, tabId: tab.id, at: Date.now() } });
+    const granted = await chrome.permissions.request(REQUIRED);
+    applyBtn.disabled = false;
+    if (!granted) {
+      await chrome.storage.session.remove("pendingApply");
+      statusEl.className = "status status-off";
+      statusText.textContent = "Site access is needed to change the timezone";
+      return;
+    }
+    setStatus(zone, true);
+    return;
+  }
+
   await chrome.runtime.sendMessage({ type: "SET_TIMEZONE", timezone: zone, tabId: tab.id });
   applyBtn.disabled = false;
   setStatus(zone, true);

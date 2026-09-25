@@ -19,9 +19,12 @@ immediately.
 2. **Reset to system timezone** to go back to normal.
 
 Only the tab that was active when you clicked Apply is affected - applying
-again from a different tab moves the override there. Applying attaches
-Chrome's debugger to that tab, which shows a yellow "being debugged" bar -
-that's Chrome's own signal, not a bug, and it stays until you reset.
+again from a different tab moves the override there. The first Apply asks
+for site access, which is needed to run in the page before its own scripts.
+
+It changes what the page's JavaScript sees (`Date`, `Intl`), not the
+browser itself, so Web Workers inside the page still see your real
+timezone.
 
 ## Screenshots
 
