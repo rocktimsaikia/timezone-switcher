@@ -2,8 +2,8 @@
 
 # Timezone Switcher
 
-Chrome extension to override the browser's effective timezone - pick a
-country, pick one of its timezones, every tab's `Date`/`Intl` reflects it
+Chrome extension to override a tab's effective timezone - pick a country,
+pick one of its timezones, that tab's `Date`/`Intl` reflects it
 immediately.
 
 ## Install
@@ -14,12 +14,14 @@ immediately.
 
 ## Usage
 
-1. Click the extension icon, search a country, pick a timezone, **Apply**.
+1. On the tab you want to override, click the extension icon, search a
+   country, pick a timezone, **Apply**.
 2. **Reset to system timezone** to go back to normal.
 
-Applying attaches Chrome's debugger to open tabs, which shows a yellow
-"being debugged" bar per tab - that's Chrome's own signal, not a bug, and
-it stays until you reset.
+Only the tab that was active when you clicked Apply is affected - applying
+again from a different tab moves the override there. Applying attaches
+Chrome's debugger to that tab, which shows a yellow "being debugged" bar -
+that's Chrome's own signal, not a bug, and it stays until you reset.
 
 ## Screenshots
 

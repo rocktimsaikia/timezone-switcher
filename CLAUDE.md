@@ -39,25 +39,40 @@ override is active. That bar is Chrome's own UI and cannot be hidden or
 restyled from extension code.
 
 Key behaviors in `background.js` worth knowing before changing it:
-- **Scope is global, not per-tab.** `chrome.tabs.onCreated` and
-  `chrome.tabs.onUpdated` (status `"loading"`) silently re-apply the active
-  timezone to every new tab and every navigation, since a CDP override does
-  not carry over across navigations on its own.
+- **Scope is a single tab, not global.** Only the tab active in the popup
+  when the user clicks Apply gets the override (`popup.js` looks it up via
+  `chrome.tabs.query({active:true, currentWindow:true})` and passes its
+  `tabId` in the `SET_TIMEZONE` message). `chrome.tabs.onUpdated` (status
+  `"loading"`) re-applies on navigation, but only for that same `tabId` -
+  a CDP override does not carry over across navigations on its own, but it
+  never follows onto other tabs or new tabs. Applying again from a
+  different tab moves the override there and clears the previous tab first
+  (`clearTab` on the old `activeTabId` before storing the new one) - only
+  one tab can have an active override at a time.
 - **Reload only on explicit user action.** `applyToTab(tabId, tz, {reload})`
   takes a `reload` flag: `true` when called from the Apply/Reset button
   path (so already-rendered `Date`/`Intl` output updates immediately),
   `false` for the silent per-navigation re-apply (avoids a reload loop).
 - **Cancel = Reset.** `chrome.debugger.onDetach` with reason
   `"canceled_by_user"` (user clicked Cancel on the infobar) triggers the
-  same `resetOverride()` path as clicking Reset in the popup - full detach
-  from all tabs, clear `chrome.storage.local`, clear the badge.
-- **State lives in `chrome.storage.local`** (`activeTimezone`), not in the
-  service worker's memory, since MV3 workers are ephemeral.
-  `chrome.runtime.onStartup` re-applies it on browser restart.
-- **Badge is the "is it on" signal**: green "TZ" badge via
-  `chrome.action.setBadgeText`/`setBadgeBackgroundColor` when an override is
-  active, cleared when not. The per-tab yellow infobar is a separate,
-  Chrome-owned signal - don't conflate the two when reasoning about state.
+  same `resetOverride()` path as clicking Reset in the popup - detach,
+  clear `chrome.storage.local`, clear the badge.
+- **State lives in `chrome.storage.local`** (`activeTimezone`,
+  `activeTabId`), not in the service worker's memory, since MV3 workers are
+  ephemeral. `chrome.runtime.onStartup` re-applies it on browser restart,
+  but tab ids don't survive a browser restart - if `chrome.tabs.get` throws
+  for the stored `activeTabId`, the state is just cleared rather than
+  silently failing forever.
+- **Badge is per-tab, not global.** `chrome.action.setBadgeText`/
+  `setBadgeBackgroundColor` are called with `{tabId}` scoped to the one
+  active tab, so the green "TZ" badge only shows while that specific tab is
+  focused - it should never be visible on a tab that isn't overridden. The
+  per-tab yellow infobar is a separate, Chrome-owned signal.
+- **The popup itself can be opened from a tab that isn't the overridden
+  one.** `GET_STATE` returns both `activeTimezone` and `activeTabId`;
+  `popup.js` compares `activeTabId` against the tab it's currently open on
+  and appends "(on another tab)" to the status line when they differ, so
+  the user is never told the current tab is overridden when it isn't.
 - **No `host_permissions` in the manifest, intentionally.** `chrome.debugger`
   attaches by `tabId`, not by URL match pattern, so it needs no host
   permissions at all. Don't add `<all_urls>` back - the Chrome Web Store

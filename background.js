@@ -2,14 +2,14 @@ const CDP_VERSION = "1.3";
 const ACTIVE_BADGE_TEXT = "TZ";
 const ACTIVE_BADGE_COLOR = "#3d8743";
 
-async function getActiveTimezone() {
-  const { activeTimezone } = await chrome.storage.local.get("activeTimezone");
-  return activeTimezone ?? null;
+async function getState() {
+  const { activeTimezone, activeTabId } = await chrome.storage.local.get(["activeTimezone", "activeTabId"]);
+  return { activeTimezone: activeTimezone ?? null, activeTabId: activeTabId ?? null };
 }
 
-function updateBadge(timezone) {
-  chrome.action.setBadgeText({ text: timezone ? ACTIVE_BADGE_TEXT : "" });
-  if (timezone) chrome.action.setBadgeBackgroundColor({ color: ACTIVE_BADGE_COLOR });
+function updateBadge(tabId, timezone) {
+  chrome.action.setBadgeText({ tabId, text: timezone ? ACTIVE_BADGE_TEXT : "" });
+  if (timezone) chrome.action.setBadgeBackgroundColor({ tabId, color: ACTIVE_BADGE_COLOR });
 }
 
 // ponytail: debugger.attach() throws if already attached to this tab; that's
@@ -32,77 +32,73 @@ async function applyToTab(tabId, timezoneId, { reload = false } = {}) {
   }
 }
 
-async function applyToAllTabs(timezoneId) {
-  const tabs = await chrome.tabs.query({});
-  await Promise.all(tabs.map((t) => applyToTab(t.id, timezoneId, { reload: true })));
-}
-
-async function clearAllTabs() {
-  const tabs = await chrome.tabs.query({});
-  await Promise.all(
-    tabs.map(async (t) => {
-      try {
-        await chrome.debugger.sendCommand({ tabId: t.id }, "Emulation.setTimezoneOverride", { timezoneId: "" });
-        chrome.tabs.reload(t.id).catch(() => {});
-      } catch (e) {
-        /* not attached to this tab, nothing to clear */
-      }
-      chrome.debugger.detach({ tabId: t.id }).catch(() => {});
-    })
-  );
+async function clearTab(tabId) {
+  try {
+    await chrome.debugger.sendCommand({ tabId }, "Emulation.setTimezoneOverride", { timezoneId: "" });
+    chrome.tabs.reload(tabId).catch(() => {});
+  } catch (e) {
+    /* not attached to this tab, nothing to clear */
+  }
+  chrome.debugger.detach({ tabId }).catch(() => {});
+  updateBadge(tabId, null);
 }
 
 async function resetOverride() {
-  await clearAllTabs();
-  await chrome.storage.local.remove("activeTimezone");
-  updateBadge(null);
+  const { activeTabId } = await getState();
+  if (activeTabId !== null) await clearTab(activeTabId);
+  await chrome.storage.local.remove(["activeTimezone", "activeTabId"]);
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   (async () => {
     if (msg.type === "SET_TIMEZONE") {
-      await chrome.storage.local.set({ activeTimezone: msg.timezone });
-      await applyToAllTabs(msg.timezone);
-      updateBadge(msg.timezone);
+      const { activeTabId: prevTabId } = await getState();
+      if (prevTabId !== null && prevTabId !== msg.tabId) await clearTab(prevTabId);
+      await chrome.storage.local.set({ activeTimezone: msg.timezone, activeTabId: msg.tabId });
+      await applyToTab(msg.tabId, msg.timezone, { reload: true });
+      updateBadge(msg.tabId, msg.timezone);
       sendResponse({ ok: true });
     } else if (msg.type === "CLEAR_TIMEZONE") {
       await resetOverride();
       sendResponse({ ok: true });
     } else if (msg.type === "GET_STATE") {
-      sendResponse({ activeTimezone: await getActiveTimezone() });
+      sendResponse(await getState());
     }
   })();
   return true;
 });
 
-// Re-apply on every new tab and every navigation, since a CDP timezone
-// override does not automatically carry over to a fresh navigation/tab.
-chrome.tabs.onCreated.addListener(async (tab) => {
-  const tz = await getActiveTimezone();
-  if (tz && tab.id !== undefined) applyToTab(tab.id, tz);
-});
-
+// Re-apply on navigation of the SAME tab only - a CDP override does not
+// survive a navigation on its own, but this extension no longer follows the
+// override onto other tabs.
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
   if (changeInfo.status !== "loading") return;
-  const tz = await getActiveTimezone();
-  if (tz) applyToTab(tabId, tz);
+  const { activeTimezone, activeTabId } = await getState();
+  if (activeTimezone && tabId === activeTabId) applyToTab(tabId, activeTimezone);
 });
 
-chrome.tabs.onRemoved.addListener((tabId) => {
+chrome.tabs.onRemoved.addListener(async (tabId) => {
   chrome.debugger.detach({ tabId }).catch(() => {});
+  const { activeTabId } = await getState();
+  if (tabId === activeTabId) await chrome.storage.local.remove(["activeTimezone", "activeTabId"]);
 });
 
 // User clicked "Cancel" on Chrome's "started debugging this browser" infobar -
 // they're rejecting the debugger session, so treat it the same as hitting Reset.
-chrome.debugger.onDetach.addListener(async (_source, reason) => {
+chrome.debugger.onDetach.addListener(async (source, reason) => {
   if (reason !== "canceled_by_user") return;
-  if (await getActiveTimezone()) await resetOverride();
+  const { activeTabId } = await getState();
+  if (source.tabId === activeTabId) await resetOverride();
 });
 
 chrome.runtime.onStartup.addListener(async () => {
-  const tz = await getActiveTimezone();
-  if (tz) {
-    await applyToAllTabs(tz);
-    updateBadge(tz);
+  const { activeTimezone, activeTabId } = await getState();
+  if (!activeTimezone || activeTabId === null) return;
+  try {
+    await chrome.tabs.get(activeTabId); // throws if this tab id no longer exists (new browser session -> new ids)
+    await applyToTab(activeTabId, activeTimezone);
+    updateBadge(activeTabId, activeTimezone);
+  } catch (e) {
+    await chrome.storage.local.remove(["activeTimezone", "activeTabId"]);
   }
 });

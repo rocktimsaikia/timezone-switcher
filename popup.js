@@ -41,14 +41,20 @@ function findCodeForZone(zone) {
   return null;
 }
 
-function setStatus(activeZone) {
+function setStatus(activeZone, isCurrentTab) {
   if (activeZone) {
     statusEl.className = "status status-on";
-    statusText.textContent = `Active - ${cityLabel(activeZone)} (${offsetLabel(activeZone)})`;
+    const where = isCurrentTab ? "" : " (on another tab)";
+    statusText.textContent = `Active - ${cityLabel(activeZone)} (${offsetLabel(activeZone)})${where}`;
   } else {
     statusEl.className = "status status-off";
     statusText.textContent = "Off - using system timezone";
   }
+}
+
+async function getCurrentTab() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  return tab;
 }
 
 function selectCountry(name) {
@@ -101,9 +107,10 @@ applyBtn.addEventListener("click", async () => {
   const zone = timezoneSelect.value;
   if (!zone) return;
   applyBtn.disabled = true;
-  await chrome.runtime.sendMessage({ type: "SET_TIMEZONE", timezone: zone });
+  const tab = await getCurrentTab();
+  await chrome.runtime.sendMessage({ type: "SET_TIMEZONE", timezone: zone, tabId: tab.id });
   applyBtn.disabled = false;
-  setStatus(zone);
+  setStatus(zone, true);
 });
 
 resetBtn.addEventListener("click", async () => {
@@ -117,8 +124,11 @@ resetBtn.addEventListener("click", async () => {
     nameToCode.set(entry.name, code);
   }
 
-  const { activeTimezone } = await chrome.runtime.sendMessage({ type: "GET_STATE" });
-  setStatus(activeTimezone);
+  const [{ activeTimezone, activeTabId }, currentTab] = await Promise.all([
+    chrome.runtime.sendMessage({ type: "GET_STATE" }),
+    getCurrentTab(),
+  ]);
+  setStatus(activeTimezone, activeTabId === currentTab.id);
   if (activeTimezone) {
     const code = findCodeForZone(activeTimezone);
     if (code) {
